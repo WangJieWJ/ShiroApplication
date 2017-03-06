@@ -165,7 +165,7 @@ Web程序需注意：
 
 
 ## Authentication Sequence认证序列
-![Shiro架构图](shiro2.png)
+![Shiro架构图](Shiro2.png)
 
 + 第一步：程序代码调用Subject.login方法，向AuthenticationToken(认证令牌)实例的构造函数传递用户的身份和证明。
 + 第二步：Subject实例，通常是一个DelegatingSubject(或其子类)通过调用securityManager.login(token)将这个令牌转交给程序SecurityManager。

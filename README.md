@@ -288,3 +288,4 @@ securityManager.realms = $fooRealm, $barRealm, $blahRealm
 https://github.com/waylau/apache-shiro-1.2.x-reference/blob/master/II.%20Core%20%E6%A0%B8%E5%BF%83/6.%20Authorization%20%E6%8E%88%E6%9D%83.md
 
 
+测试项目的回滚机制！！！。

@@ -193,11 +193,98 @@ securityManager.authenticator= $authenticator;
 ```
 尽管在实际操作中，ModularRealmAuthenticator使用于大部分需求
 
+### AuthenticationStrategy
+当一个程序中定义了两个或者多个realm时，ModularRealmAuthenticator使用一个内部的AuthenticationStrategy 组件来决定一个验证是否成功。
 
+例如，如果一个Realm 验证一个 AuthenticationToken 成功，但其他的都失败了，那这次尝试是否被认为是成功的呢？是不是所有 Realm 验证都成功了才认为是成功？
+又或者一个 Realm 验证成功，是否还有必要讨论其他Realm？AuthenticationStrategy 根据程序需求做出恰当的决定。
 
+AuthenticationStrategy 是一个 stateless 的组件，在整个验证过程中在被用到4次（在这4次活动中需要必要的 state 时，state 将作为方法参数传递）
++ 在任何 Realms 被执行之前；
++ 在某个的 Realm 的 getAuthenticationInfo 方法调用之前；
++ 在某个的 Realm 的 getAuthenticationInfo 方法调用之后；
++ 在所有的 Realm 被执行之后。
+AuthenticationStrategy 还有责任从每一个成功的 Realm 中收集结果并将它们“绑定”到一个单独的 AuthenticationInfo，
+这个AuthenticationInfo 实例是被 Authenticator 实例返回的，并且 shiro 用它来展现一个 Subject 的最终身份（也就是 Principals ）
 
+Subject 身份“展示（view）”
 
+如果你在程序中使用多于一个的 Realm 从多个数据源中获取帐户数据，程序可看到的是 AuthenticationStrategy 最终负责 Subject 身份最终“合并（merged）”的视图
 
+Shiro有3个具体的AuthenticationStrategy实现：
 
+<table>
+<tr>
+    <th>AuthenticationStrategy  class</th>
+    <th>Description</th>
+</tr>
+<tr>
+    <td>AtLeastOneSuccessfulStrategy</td>
+    <td>如果有一个或多个Realm验证成功，所有的尝试都被认为是成功的，如果没有一个验证成功，则该次尝试失败</td>
+</tr>
+<tr>
+    <td>FirstSuccessfulStrategy</td>
+    <td>只有从第一个成功验证的Realm返回的信息会被调用，以后的Realm将被忽略，如果没有一个验证成功，则该次尝试失败</td>
+</tr>
+<tr>
+    <td>AllSuccessfulStrategy</td>
+    <td>所有配置的Realm在全部尝试中都成功验证才被认为是成功，如果有一个验证不成功，则该次尝试失败</td>
+</tr>
+</table>
+
+ModularRealmAuthenticator 默认使用 AtLeastOneSuccessfulStrategy 实现，这也是最常用的策略，然而你也可以配置你希望的不同的策略。
+```shiro.ini
+[main]
+···
+authcStrategy = org.apache.shiro.authc.FirstSuccessfulStrategy
+
+securityManager.authenticator.authenticatStrategy = $authcStrategy
+```
+
+自定义的 AuthenticationStrategy
+
+如果你希望创建你自己的 AuthenticationStrategy 实现，你可以使用 org.apache.shiro.authc.pam.AbstractAuthenticationStrategy 作为起始点。
+AbstractAuthenticationStrategy 类自动实现 '绑定（bundling）'/聚集（aggregation）行为将来自于每个Realm 的结果收集到一个 AuthenticationInfo 实例中。
+
+### Realm 验证的顺序
+非常重要的一点是，和Realm交互的ModularRealmAuthenticator按迭代(iteration)顺序执行。
+
+ModularRealmAuthenticator可以访问为SecurityManager配置的Realm实例，
+当尝试一次验证时，它将在集合中遍历，支持对提交的 AuthenticationToken 处理的每个 Realm 都将执行 Realm 的 getAuthenticationInfo 方法。
+
+### 隐含的顺序
+在使用ShiroINI配置文件形式时，你可以按你希望其处理AuthenticationToken 的顺序来配置 Realm，例如，在shiro.ni 中，Realm 将按照他们在INI文件中定义的顺序执行。
+```
+blahRealm = com.company.blah.Realm
+...
+fooRealm = com.company.foo.Realm
+...
+barRealm = com.company.another.Realm
+```
+
+SecurityManager上配置了这三个 Realm，在一个验证过程中，blahRealm, fooRealm, 和 barRealm 将被顺序执行。
+这基本上与定义下面这一行语句的效果相同：
+
+```
+securityManager.realms = $blahRealm, $fooRealm, $barRealm
+```
+使用这种方法，你不需要设置 securityManager 的 realm 顺序，每一个被定义的realm 将自动加入到 realms 属性中。
+
+### Explicit Ordering明确的顺序
+如果你希望明确定义 realm 执行的顺序，不管他们如何被定义，你可以设置 SecurityManager 的 realms 属性，例如，使用上面定义的 realm，但你希望 blahRealm 最后执行而不是第一个：
+```
+blahRealm = com.company.blah.Realm
+...
+fooRealm = com.company.foo.Realm
+...
+barRealm = com.company.another.Realm
+
+securityManager.realms = $fooRealm, $barRealm, $blahRealm
+```
+明确 Realm 包含
+
+当你明确的配置 securityManager.realms 属性时，只有被引用的 realm 将为 SecurityManager 配置，也就是说你可能在 INI 中定义了5个 realm，但实际上只使用了3个，如果在 realm 属性中只引用了3个，这和隐含的 realm 顺序不同，在那种情况下，所有有效的 realm 都会用到。
+
+https://github.com/waylau/apache-shiro-1.2.x-reference/blob/master/II.%20Core%20%E6%A0%B8%E5%BF%83/6.%20Authorization%20%E6%8E%88%E6%9D%83.md
 
 

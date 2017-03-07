@@ -1,3 +1,5 @@
+import org.apache.shiro.authc.pam.AbstractAuthenticationStrategy;
+
 /**
  * Title:
  * Description:

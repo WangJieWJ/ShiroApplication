@@ -10,10 +10,33 @@
 
 
     <dependencies>
+
+        <!-- 权限框架Shiro依赖 -->
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>
             <version>1.2.2</version>
+        </dependency>
+
+        <!-- Apache工具类  -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
+        </dependency>
+
+        <!-- 加密与解密操作 工具类 -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.10</version>
+        </dependency>
+
+        <!-- 操作Collection -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
         </dependency>
     </dependencies>
 
